@@ -1,0 +1,94 @@
+﻿@page "/vessels/{IMO:int}/traces"
+
+<PageTitle>Traces</PageTitle>
+
+@using WebAPP.Data.Abstractions
+@using WebAPP.Data.API
+@inject ITracesService TracesService
+
+<h1>Traces</h1>
+
+@if (_traces == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Time Stamp</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var trace in _traces)
+            {
+                <tr>
+                    @if (trace.IsEditing)
+                    {
+                        <td>
+                            <input type="number" 
+                                   class="form-control" 
+                                   step=".01"
+                                   @bind="@trace.Latitude" />
+                        </td>
+                        <td>
+                            <input type="number" 
+                                   class="form-control"
+                                   step=".01"
+                                   @bind="@trace.Longitude" />
+                        </td>
+                        <td>
+                            <input type="date" 
+                                   class="form-control" 
+                                   @bind="@trace.TimeStamp" />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-success" @onclick="() => ToggleEdit(trace)">
+                                Submit
+                            </button>
+                        </td>
+                    }
+                    else
+                    {
+                        <td>@trace.Latitude</td>
+                        <td>@trace.Longitude</td>
+                        <td>@trace.TimeStamp.ToLongDateString()</td>
+                        <td>
+                            <button type="button" class="btn btn-primary" @onclick="() => ToggleEdit(trace)">
+                                Edit
+                            </button>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Trace>? _traces;
+
+    [Parameter]
+    public int IMO { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await TracesService.GetTracesAsync(IMO);
+        _traces = response.Result;
+    }
+
+
+    private async Task ToggleEdit(Trace trace)
+    {
+        if (trace.IsEditing)
+        {
+            await TracesService.UpdateTraceAsync(trace);
+        }
+        
+        trace.IsEditing = !trace.IsEditing;
+    }
+}

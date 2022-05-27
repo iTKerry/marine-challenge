@@ -1,0 +1,37 @@
+version: '3.7'
+
+services:
+  app:
+    image: marine.webapp
+    container_name: marine.webapp
+    networks:
+      - marine
+    depends_on:
+      - api
+    build:
+      context: .
+      dockerfile: src/WebAPP/Dockerfile
+
+  api:
+    image: marine.webapi
+    container_name: marine.webapi
+    networks:
+      - marine
+    depends_on:
+      - db
+    build:
+      context: .
+      dockerfile: src/WebAPI/Dockerfile
+  
+  db:
+    image: mcr.microsoft.com/mssql/server:2019-GA-ubuntu-16.04
+    container_name: marine.db
+    networks:
+      - marine
+    environment:
+      SA_PASSWORD: "Strong_P@55w0rd"
+      ACCEPT_EULA: "Y"
+
+networks:
+  marine:
+    name: marine.network

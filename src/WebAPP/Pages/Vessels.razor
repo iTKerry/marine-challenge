@@ -1,0 +1,87 @@
+﻿@page "/vessels"
+
+<PageTitle>Vessels</PageTitle>
+
+@using WebAPP.Data.Abstractions
+@using WebAPP.Data.API
+@inject IVesselsService VesselsService
+
+<h1>Vessels</h1>
+
+@if (_vessels == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>IMO</th>
+                <th>Vessel Name</th>
+                <th>Last Time Stamp</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var vessel in _vessels)
+            {
+                <tr>
+                    @if (vessel.IsEditing)
+                    {
+                        <td>@vessel.IMO</td>
+                        <td>
+                            <input type="text" 
+                                   class="form-control" 
+                                   placeholder="Give the instance a name" 
+                                   @bind="@vessel.Name" />
+                        </td>
+                        <td>
+                            <input type="date" 
+                                   class="form-control" 
+                                   placeholder="Give the instance a name" 
+                                   @bind="@vessel.LastTimeStamp" />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-success" @onclick="() => ToggleEdit(vessel)">
+                                Submit
+                            </button>
+                        </td>
+                    }
+                    else
+                    {
+                        <td>@vessel.IMO</td>
+                        <td>@vessel.Name</td>
+                        <td>@vessel.LastTimeStamp.ToLongDateString()</td>
+                        <td>
+                            <button type="button" class="btn btn-primary" @onclick="() => ToggleEdit(vessel)">
+                                Edit
+                            </button>
+                            <a class="btn btn-info" href="@($"/vessels/{vessel.IMO.ToString()}/traces")">View Traces</a>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Vessel>? _vessels;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await VesselsService.GetVesselsAsync();
+        _vessels = response.Result;
+    }
+
+    private async Task ToggleEdit(Vessel vessel)
+    {
+        if (vessel.IsEditing)
+        {
+            await VesselsService.UpdateVesselAsync(vessel);
+        }
+        
+        vessel.IsEditing = !vessel.IsEditing;
+    }
+}
